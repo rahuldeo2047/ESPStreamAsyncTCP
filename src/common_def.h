@@ -58,7 +58,8 @@ void notifier_setNotifierState(NOTIFIER_STATES _state);
 void notifier_ledNotifierLoop();
 
 
-void setup_server_connection();
-
+void loop_server_connection();
+bool is_data_available();
+char read_data();
 
 #endif //COMMON_DEF_H

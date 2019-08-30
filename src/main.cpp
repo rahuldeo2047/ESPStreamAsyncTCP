@@ -270,7 +270,6 @@ void setup()
 
   wifimanager_setup();
 
-  setup_server_connection();
 
 
 
@@ -491,15 +490,20 @@ void loop()
   //   notifier_setNotifierState(test_events[((event_num)%MAX_TEST_EVENT)].state);
   //   Serial.printf_P("notifier event: %s\n", test_events[((event_num)%MAX_TEST_EVENT)].event_name);
     
-  //   //event_num++;
-  // }
+    // }
 
+  if(is_data_available())
+  {
+    Serial.write(read_data());
+  }
   
   if(elapsedTimeMain >= 5000)
   {
     elapsedTimeMain = 0;
     //sequence.Reset();
     mpu_scan();
+      loop_server_connection(); // test
+
     
 
     //led_breathe_white_normal.Reset();
