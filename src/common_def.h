@@ -62,5 +62,7 @@ void loop_server_connection();
 bool is_data_available();
 char read_data();
 void setup_server_connection();
+bool check_for_data();
+bool parse_data();
 
 #endif //COMMON_DEF_H

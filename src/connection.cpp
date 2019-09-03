@@ -204,19 +204,29 @@ bool check_for_response()
 
     sclient.readBytesUntil('\r', status_str, sizeof(status_str)); 
 
+	// sprintf(getPrintBuffer(), "\n\nResponse: %s\n\n", status_str);
+    //     //Serial.print(F("Unexpected response: "));
+	// Serial.println(getPrintBuffer());
+	// syslog_warn(getPrintBuffer());
+
     //notifier_setNotifierState(NOTIFIER_STATES::_2_LED_SERVER_DATA_SENT_RESPONDED);
  
     // It should be "HTTP/1.0 200 OK" or "HTTP/1.1 200 OK"
     if (strcmp(status_ptr + 9, "200 OK") != 0)
     {
-        notifier_setNotifierState(NOTIFIER_STATES::_0_NOTIFIER_CODE_ERROR);
+        //notifier_setNotifierState(NOTIFIER_STATES::_0_NOTIFIER_CODE_ERROR);
         status = false;
-        sprintf(print_buffer, "Unexpected response: %s", status_str);
+        sprintf(getPrintBuffer(), "\n\nUnexpected response: %s\n\n", status_str);
         //Serial.print(F("Unexpected response: "));
-        Serial.println((char *)status_str);
-        syslog_warn(print_buffer);
+        Serial.println(getPrintBuffer());
+        syslog_warn(getPrintBuffer());
 		// return if any other flow further needs to be done
     }
+	else
+	{
+		status = true;
+	}
+	
 
 	return status;
 

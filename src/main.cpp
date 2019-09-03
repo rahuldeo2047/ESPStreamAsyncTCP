@@ -412,6 +412,8 @@ int event_num = 0;
 
 int test_index = 0;
 
+bool status_server_response=false;
+
 void loop()
 {
 
@@ -460,17 +462,35 @@ void loop()
 
   // }
 
-  if (is_data_available())
+  if (status_server_response)
   {
-    Serial.write(read_data());
+    //Serial.write(read_data());
+    Serial.printf_P("|server| %d | parse_data() %d\n",micros(), status_server_response);
+
+    status_server_response = parse_data();
+
+    Serial.printf_P("|server| %d | parsed data() %d\n",micros(), status_server_response);
+
+    status_server_response = false;
   }
 
-  if (elapsedTimeMain >= 5000)
+  if (is_data_available() && status_server_response==false)
+  {
+    //Serial.write(read_data());
+    status_server_response = check_for_data();
+    Serial.printf_P("|server| %d | check_for_data() %d\n",millis(),status_server_response);
+  }
+
+  if (elapsedTimeMain >= 10000)
   {
     elapsedTimeMain = 0;
     //sequence.Reset();
     mpu_scan();
+    
+    Serial.printf_P("|server| %d | send_data() %d\n",millis(), status_server_response);
+
     loop_server_connection(); // test
+    status_server_response =false;
 
     //led_breathe_white_normal.Reset();
   }
