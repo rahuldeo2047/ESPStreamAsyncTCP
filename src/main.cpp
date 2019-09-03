@@ -462,14 +462,29 @@ void loop()
 
   // }
 
+
+  // server data ping pong profiling
+  /*
+    |server| 10063000 | send_data() 0
+    |server| 12550000 | check_for_data() 1
+    |server| 12551097 | parse_data() 1
+    |server| 12720445 | parsed data() 0
+
+    169 ms serial+udp
+    059 ms udp
+    166 ms serial
+    040 ms no print
+  */
   if (status_server_response)
   {
     //Serial.write(read_data());
-    Serial.printf_P("|server| %d | parse_data() %d\n",micros(), status_server_response);
+    unsigned long ts_1=micros();
+    Serial.printf_P("|server| %d | parse_data() %d\n",ts_1, status_server_response);
 
     status_server_response = parse_data();
+    //ts_1 = micros();
 
-    Serial.printf_P("|server| %d | parsed data() %d\n",micros(), status_server_response);
+    Serial.printf_P("|server| %d (%d) | parsed data() %d\n",micros(), micros()-ts_1, status_server_response);
 
     status_server_response = false;
   }
