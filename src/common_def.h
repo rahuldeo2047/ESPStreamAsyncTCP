@@ -61,5 +61,6 @@ void notifier_ledNotifierLoop();
 void loop_server_connection();
 bool is_data_available();
 char read_data();
+void setup_server_connection();
 
 #endif //COMMON_DEF_H

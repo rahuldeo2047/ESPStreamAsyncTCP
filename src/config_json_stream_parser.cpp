@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+
 //char print_buffer[256] = {0}; //externed from config.h
 
 void ConfigListener::print(char *msg)
@@ -436,7 +437,7 @@ void ConfigListener::value(String value)
 
   default:
   {
-    sprintf(getPrintBuffer(), "cjsp: %d | (?? %s ??) | Wrong key received.", __LINE__, Device_config_ToString(index));
+    sprintf(getPrintBuffer(), "cjsp: %d | (-- %s --) | Wrong key received.", __LINE__, Device_config_ToString(index));
     this->print(getPrintBuffer());
   }
   }

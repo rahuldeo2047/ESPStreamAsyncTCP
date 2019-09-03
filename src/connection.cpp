@@ -22,6 +22,10 @@ extern "C"
 AsyncClient *client = new AsyncClient;
 SyncClient sclient;
 
+JsonStreamingParser json_parser;
+ConfigListener json_parser_listener;
+Device_config * device_config;
+
 static void replyToServer(void *arg)
 {
 	AsyncClient *client = reinterpret_cast<AsyncClient *>(arg);
@@ -148,7 +152,6 @@ String create_query()
 bool is_data_available()
 {
 	return sclient.available();
- 
 }
 
 char read_data()
@@ -156,6 +159,100 @@ char read_data()
 	return sclient.read(); // returns -1 if nothing received yet
 }
 
+// call it only when check_for_data() == true
+bool parse_data()
+{
+	bool status ;
+	json_parser.reset();
+	unsigned long ts_wait_for_client = millis();
+    while (is_data_available())
+    {
+        json_parser.parse( (char) read_data() );
+        //delayMicroseconds(100);
+
+        if (millis() - ts_wait_for_client > 250)
+        {
+            //Serial.println(" timed out.");
+            sprintf(print_buffer, " timed out.");
+            //Serial.println();
+            Serial.println(print_buffer);
+            syslog_warn(print_buffer);
+            status = false;                                                                                 
+            sclient.stop();     
+            return false;
+            break;
+        }
+    } 
+    
+    // // This can use too much of data on internet download part
+ 
+    sprintf(print_buffer, "JSON parsing ended");
+    //Serial.println();
+    Serial.println(print_buffer);
+    syslog_info(print_buffer);
+
+	return status;
+}
+
+bool check_for_response()
+{
+	// Check HTTP status
+	bool status;
+    uint8_t status_str[32] = {0};
+    const char *status_ptr = (const char *)status_str;
+    sclient.setTimeout(1500);
+
+    sclient.readBytesUntil('\r', status_str, sizeof(status_str)); 
+
+    //notifier_setNotifierState(NOTIFIER_STATES::_2_LED_SERVER_DATA_SENT_RESPONDED);
+ 
+    // It should be "HTTP/1.0 200 OK" or "HTTP/1.1 200 OK"
+    if (strcmp(status_ptr + 9, "200 OK") != 0)
+    {
+        notifier_setNotifierState(NOTIFIER_STATES::_0_NOTIFIER_CODE_ERROR);
+        status = false;
+        sprintf(print_buffer, "Unexpected response: %s", status_str);
+        //Serial.print(F("Unexpected response: "));
+        Serial.println((char *)status_str);
+        syslog_warn(print_buffer);
+		// return if any other flow further needs to be done
+    }
+
+	return status;
+
+
+}
+
+bool check_for_data()
+{
+	bool status = check_for_response();
+	if(status == true)
+	{
+		sclient.setTimeout(2);
+		char endOfHeaders[] = "\r\n\r\n";
+		if (!sclient.find(endOfHeaders))
+		{
+			status = false;
+		}
+		else
+		{
+			status = true;
+		}
+	}
+	
+	return status;
+}
+
+ConfigListener * getJsonConfigListenerPtr()
+{
+    return &json_parser_listener;
+} 
+
+void setup_server_connection()
+{
+	json_parser.setListener(&json_parser_listener); 
+    device_config = json_parser_listener.getDeviceConfigPtr();
+}
 void loop_server_connection()
 {
 
@@ -165,11 +262,11 @@ void loop_server_connection()
 		 
 		String getStr = create_query();
 
-		if(sclient.printf(getStr.c_str())>0)
+		// send data
+		if(sclient.printf(getStr.c_str())>0) // send data
 		{
 			// sent
-						Serial.println("Send sent\n");
-
+			Serial.println("Send sent\n");
 		}
 
 		// if (sclient.printf(getStr.c_str()) > 0)
