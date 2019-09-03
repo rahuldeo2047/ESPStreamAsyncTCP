@@ -266,7 +266,7 @@ void loop_server_connection()
 		if(sclient.printf(getStr.c_str())>0) // send data
 		{
 			// sent
-			Serial.println("Send sent\n");
+			Serial.printf_P("Send sent: %s\n",getStr.c_str());
 		}
 
 		// if (sclient.printf(getStr.c_str()) > 0)
