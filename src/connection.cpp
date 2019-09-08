@@ -19,105 +19,13 @@ extern "C"
 
 #include "common_def.h"
 
-AsyncClient *client = new AsyncClient;
+//AsyncClient *client = new AsyncClient;
 SyncClient sclient;
 
 JsonStreamingParser json_parser;
 ConfigListener json_parser_listener;
 Device_config * device_config;
-
-static void replyToServer(void *arg)
-{
-	AsyncClient *client = reinterpret_cast<AsyncClient *>(arg);
-
-	// send reply
-	if (client->space() > 32 && client->canSend())
-	{
-		char message[32];
-		sprintf(message, "this is from %s", WiFi.localIP().toString().c_str());
-		client->add(message, strlen(message));
-		client->send();
-	}
-}
-
-static void sendData(String _msg)
-{
-
-	// send data
-	if (client->space() > _msg.length() && client->canSend())
-	{
-		client->add(_msg.c_str(), _msg.length());
-		if (client->send())
-		{
-			sprintf_P(getPrintBuffer(), "\n data sent\n");
-		}
-		else
-		{
-			sprintf_P(getPrintBuffer(), "\n data send failed\n");
-		}
-
-		Serial.printf(getPrintBuffer());
-		syslog_info(getPrintBuffer());
-	}
-}
-
-/* event callbacks */
-static void handleData(void *arg, AsyncClient *client, void *data, size_t len)
-{
-	//Serial.printf("\n data received from %s \n", client->remoteIP().toString().c_str());
-	//Serial.write((uint8_t*)data, len);
-
-	sprintf_P(getPrintBuffer(), "\n data received from %s , (%d) %s", client->remoteIP().toString().c_str(), len, (char *)data);
-	Serial.printf(getPrintBuffer());
-	syslog_info(getPrintBuffer());
-
-	//os_timer_arm(&intervalTimer, 2000, true); // schedule for reply to server at next 2s
-}
-
-void onConnect(void *arg, AsyncClient *client)
-{
-	//Serial.printf("\n client has been connected to %s on port %d \n", php_server, php_server_port);
-
-	sprintf_P(getPrintBuffer(), "\n client has been connected to %s on port %d \n", php_server, php_server_port);
-	Serial.printf(getPrintBuffer());
-	syslog_info(getPrintBuffer());
-	//replyToServer(client);
-
-	String mac_str = (WiFi.macAddress());
-	mac_str.replace(":", "");
-
-	String data_str = "device_code_type=" + String(DEVICE_DEVELOPMENT_TYPE) + "&config_id=" + String(config_id) + "&config_type=l" // long or short
-					  + "&device_code_version=" + _VER_ + "&Device_mac_id_str=" + mac_str;
-
-	String getStr = "GET " + String(php_config_server_file_target) + data_str + " HTTP/1.1\r\nHost: " + String(php_server) + "\r\n" + "Connection: keep-alive\r\n"
-					//+ "Content-Length: " + data_str.length() + "\r\n" +
-					+ "\r\n\r\n"
-		//+ data_str
-		;
-
-	// String request = String("POST ") + url + "HTTP/1.0 \r\n" +
-	//                  "Host: " + host + "\r\n" +
-	//                  "Accept: *" + "/" + "*\r\n" +
-	//                  "Content-Length: " + data.length() + "\r\n" +
-	//                  "Content-Type: aplication/x-www-form-urlencoded\r\n" +
-	//                  "\r\n" + data;
-	// Serial.print(request);
-	// client.print(request);
-
-	sprintf_P(getPrintBuffer(), "\n sending data %s\n", getStr.c_str());
-	Serial.printf(getPrintBuffer());
-	syslog_info(getPrintBuffer());
-
-	sendData(getStr);
-}
-
-void onDisconnect(void *arg, AsyncClient *client)
-{
-	sprintf_P(getPrintBuffer(), "\n client has been disconnected from %s on port %d \n", php_server, php_server_port);
-	Serial.printf(getPrintBuffer());
-	syslog_info(getPrintBuffer());
-}
-
+  
 bool server_connect()
 {
 	bool status = true;
@@ -149,7 +57,7 @@ String create_query()
 	return getStr;
 }
 
-bool is_data_available()
+bool server_is_data_available()
 {
 	return sclient.available();
 }
@@ -160,12 +68,12 @@ char read_data()
 }
 
 // call it only when check_for_data() == true
-bool parse_data()
+bool server_parse_data()
 {
 	bool status ;
 	json_parser.reset();
 	unsigned long ts_wait_for_client = millis();
-    while (is_data_available())
+    while (server_is_data_available())
     {
         json_parser.parse( (char) read_data() );
         //delayMicroseconds(100);
@@ -233,7 +141,7 @@ bool check_for_response()
 
 }
 
-bool check_for_data()
+bool server_check_for_data()
 {
 	bool status = check_for_response();
 	if(status == true)
@@ -263,6 +171,7 @@ void setup_server_connection()
 	json_parser.setListener(&json_parser_listener); 
     device_config = json_parser_listener.getDeviceConfigPtr();
 }
+
 void loop_server_connection()
 {
 
@@ -278,22 +187,7 @@ void loop_server_connection()
 			// sent
 			Serial.printf_P("Send sent: %s\n",getStr.c_str());
 		}
-
-		// if (sclient.printf(getStr.c_str()) > 0)
-		// {
-		// 	while (sclient.connected() && sclient.available() == 0)
-		// 	{
-		// 		delay(1);
-		// 	}
-		// 	while (sclient.available())
-		// 	{
-		// 		Serial.write(sclient.read());
-		// 	}
-		// 	if (sclient.connected())
-		// 	{
-		// 		sclient.stop();
-		// 	}
-		// }
+ 
 		else
 		{
 			sclient.stop();

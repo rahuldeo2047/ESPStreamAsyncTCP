@@ -481,7 +481,7 @@ void loop()
     unsigned long ts_1=micros();
     Serial.printf_P("|server| %d | parse_data() %d\n",ts_1, status_server_response);
 
-    status_server_response = parse_data();
+    status_server_response = server_parse_data();
     //ts_1 = micros();
 
     Serial.printf_P("|server| %d (%d) | parsed data() %d\n",micros(), micros()-ts_1, status_server_response);
@@ -489,10 +489,10 @@ void loop()
     status_server_response = false;
   }
 
-  if (is_data_available() && status_server_response==false)
+  if (server_is_data_available() && status_server_response==false)
   {
     //Serial.write(read_data());
-    status_server_response = check_for_data();
+    status_server_response = server_check_for_data();
     Serial.printf_P("|server| %d | check_for_data() %d\n",millis(),status_server_response);
   }
 

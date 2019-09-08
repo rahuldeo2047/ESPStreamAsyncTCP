@@ -179,6 +179,8 @@ double valid_frequency_mpu = 0.0;
 void mpu_loop()
 {
   //mpu6050.update();
+  static unsigned long last_millis;
+
 
   if (micros() - timer_micros_mpu > sampling_duration_us)
   {
@@ -311,7 +313,8 @@ void mpu_loop()
       //void sendGraphDate(char* _device_id, char *message) 
       
       elapsedTime = 0;
-      sprintf(print_buffer, "| MPU | dfft: %2.4f | dt %d smpl %2.4f %2.4f Hz %2.3f dB %2.1f", acc_fft_magnitude_double_filtered_mpu, time_profile_mpu, samplingFrequency, valid_frequency_mpu, acc_fft_magnitude_mpu, temp_mpu);
+      sprintf(print_buffer, "| MPU | %d (%d) |dfft: %2.4f | dt %d smpl %2.4f %2.4f Hz %2.3f dB %2.1f", millis(),millis()-last_millis, acc_fft_magnitude_double_filtered_mpu, time_profile_mpu, samplingFrequency, valid_frequency_mpu, acc_fft_magnitude_mpu, temp_mpu);
+      
       syslog_debug(print_buffer);
 Serial.println(print_buffer);
      /*  Serial.print("| MPU | ");
@@ -346,7 +349,7 @@ Serial.println(print_buffer);
       Serial.print(" Tm filtered ");
       Serial.println(temp_filtered_mpu, 2);*/
     }
-
+last_millis= millis();
     lsr_mpu = sr_mpu;
   }
 

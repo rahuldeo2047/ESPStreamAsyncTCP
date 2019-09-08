@@ -11,8 +11,8 @@
 
 void ConfigListener::print(char *msg)
 {
-  Serial.println(msg);
-  syslog_debug(msg);
+  //Serial.println(msg);
+  //syslog_debug(msg);
 }
 
 Device_config * ConfigListener::getDeviceConfigPtr()
